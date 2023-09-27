@@ -6,13 +6,13 @@
 //Floor function
 int floorlog(int num);
 
-//Pocklington test
+//test de Pocklington
 int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r);
 
 //Bit count
 void bitcount(mpz_t n);
 
-//Random n bit number
+//Random n bit odd number
 void randomNBitOddNumber(mpz_t num, int nbits, gmp_randstate_t state);
 
 //test de Miller-Rabin
@@ -35,6 +35,7 @@ int main()
     clock_t start, end;
 
     //Variables enteras
+    //phi_n son las bases para demostrar que el primer candidato es primo
     int i, nbits, aux, exp, m, proof = 0, mrfactor;
     int phi[4] = {2, 3, 5, 7};
 
@@ -60,14 +61,7 @@ int main()
     start = clock();
 
     //Generación de un número primo aleatorio de 32 bits 
-    //randomNBitNumber(p, 32);
-
-    //mpz_set_ui(p, 4294967295);
-
     //Empezar con 2^31
-    //mpz_set_ui(p, 2147483648);
-    //mpz_urandomb(randNumb, state, 32);
-    //mpz_add(p, p, randNumb);
 
     randomNBitOddNumber(p, 32, state);
     gmp_printf("Candidate p = %Zd\n", p);
@@ -75,7 +69,6 @@ int main()
     //El primer primo debe ser primo demostrado
     //Se puede partir con un gcd con 105
     //luego se puede hacer con Miller-Rabin con 4 bases phi_4
-
 
     while(!proof)
     {
@@ -100,26 +93,9 @@ int main()
                 proof = 1;
         }
         else
-        {
             randomNBitOddNumber(p, 32, state);
-        }
     }
 
-    /*while(mpz_probab_prime_p(p, 15) == 0)
-    {
-        mpz_sub(p, p, randNumb);
-        mpz_urandomb(randNumb, state, 32);
-        //while(mpz_odd_p(randNumb) == 0)
-        //    mpz_urandomb(randNumb, state, 32);
-        if(mpz_odd_p(randNumb) == 0)
-            mpz_add_ui(randNumb, randNumb, 1);
-            //randomNBitNumber(p, 32);
-        //mpz_set_ui(p, 4294967295);
-        //mpz_set_ui(p, 2147483648);
-        mpz_add(p, p, randNumb);
-    }
-*/
-    
     gmp_printf("Primer primo p demostrado = %Zd\n", p);
 
     //Ciclo para generar primos más grandes
@@ -127,14 +103,10 @@ int main()
     for(i = 5; i < aux; i++)
     {
         exp = 1 << i;
+
         //printf("exponente = 2^%d = %d\n", i, exp);
-        //mpz_ui_pow_ui(exp, 2, i);
-        //mpz_sub_ui(exp, exp, 1);
-        //mpz_urandomb(k, state, exp);
-        //mpz_urandomb(k, state, i);
 
         randomNBitOddNumber(k, exp, state);
-
         mpz_mul_ui(r, k, 2);
         mpz_mul(n, r, p);
         mpz_add_ui(n, n, 1);
@@ -152,10 +124,6 @@ int main()
         gmp_printf("prime n = %Zd = %Zd * %Zd + 1\n", n, p, r);
         mpz_set(p, n);
     }
-    //if(mpz_probab_prime_p(n, 15) > 0)
-    //    gmp_printf(" Probably Prime n = %Zd\n", n);
-    //else
-    //    gmp_printf("Composite n = %Zd\n", n);
 
     //bitcount(n);
 
@@ -166,11 +134,6 @@ int main()
     printf("m = %d\n", m);
 
 
-    //mpz_ui_pow_ui(m, 2, aux);
-    //mpz_sub(m, r, m);
-    //mpz_sub_ui(m, m ,1);
-
-    //mpz_urandomb(k, state, m);
     randomNBitOddNumber(k, m, state);
     mpz_mul_ui(r, k, 2);
     mpz_mul(n, r, p);
@@ -179,12 +142,10 @@ int main()
     
     while(!pocklingtonTest(n, p, r))
     {
-        //mpz_urandomb(k, state, m);
         randomNBitOddNumber(k, m, state);
         mpz_mul_ui(r, k, 2);
         mpz_mul(n, r, p);
         mpz_add_ui(n, n, 1);
-        //pocklingtonTest(n, p, r);
     }
     mpz_set(p, n);
 
@@ -196,7 +157,6 @@ int main()
         gmp_printf(" Probably Prime n = %Zd\n", p);
     else
         gmp_printf("Composite n = %Zd\n", p);
-
 
     bitcount(p);
 
@@ -250,27 +210,17 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r)
         flag = 0;
     }
 
-    //if(mpz_cmp_ui(criterion, 1) == 0)
-    //{
-    //    printf("Fermat test passed\n");
-    //    mpz_powm(mcd, base, r, n);
-    //    mpz_sub_ui(mcd, mcd, 1);
-    //    mpz_gcd(mcd, mcd, n);
-        if(mpz_cmp_ui(criterion, 1) != 0)
-        {
-            //printf("Pocklington test failed\n");
-            flag = 0;
-        }
-    //}
-    //else
-    //{
+    if(mpz_cmp_ui(criterion, 1) != 0)
+    {
+        //printf("Pocklington test failed\n");
+        flag = 0;
+    }
     mpz_powm(criterion, criterion, p, n);
     if(mpz_cmp_ui(criterion, 1) == 0)
     {
         //printf("Fermat test passed in Pocklington\n");
         flag = 1;
     }
-    //}
 
     mpz_clear(base);
     mpz_clear(criterion);
