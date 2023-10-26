@@ -38,6 +38,8 @@ int main()
     //phi_n son las bases para demostrar que el primer candidato es primo
     int i, nbits, aux, exp, m, proof = 0, mrfactor;
     int phi[4] = {2, 3, 5, 7};
+    int j, numtests;
+    double avgtime = 0;
 
     //Inicialización de variables de gmp
     mpz_init(k);
@@ -57,6 +59,11 @@ int main()
     printf("Enter the number of bits: ");
     scanf("%d", &nbits);
 
+    printf("Enter the number of tests:\n");
+    scanf("%d", &numtests);
+    
+for(j = 0; j < numtests; j++)
+{
     //Inicio de medición del tiempo
     start = clock();
 
@@ -64,7 +71,7 @@ int main()
     //Empezar con 2^31
 
     randomNBitOddNumber(p, 32, state);
-    gmp_printf("Candidate p = %Zd\n", p);
+    //gmp_printf("Candidate p = %Zd\n", p);
 
     //El primer primo debe ser primo demostrado
     //Se puede partir con un gcd con 105
@@ -96,7 +103,7 @@ int main()
             randomNBitOddNumber(p, 32, state);
     }
 
-    gmp_printf("Primer primo p demostrado = %Zd\n", p);
+    //gmp_printf("Primer primo p demostrado = %Zd\n", p);
 
     //Ciclo para generar primos más grandes
     aux = floorlog(nbits);
@@ -121,17 +128,17 @@ int main()
             mpz_add_ui(n, n, 1);
         }
 
-        gmp_printf("prime n = %Zd = %Zd * %Zd + 1\n", n, p, r);
+        //gmp_printf("prime n = %Zd = %Zd * %Zd + 1\n", n, p, r);
         mpz_set(p, n);
     }
 
     //bitcount(n);
 
     m = 1 << aux;
-    printf("logfloor de nbits = %d\n", aux);
-    printf("m = %d\n", m);
+    //printf("logfloor de nbits = %d\n", aux);
+    //printf("m = %d\n", m);
     m = nbits - m;
-    printf("m = %d\n", m);
+    //printf("m = %d\n", m);
 
 
     randomNBitOddNumber(k, m, state);
@@ -149,19 +156,25 @@ int main()
     }
     mpz_set(p, n);
 
-    gmp_printf("Número primo n = %Zd \n", p);
+    //gmp_printf("Número primo n = %Zd \n", p);
 
     end = clock();
 
-    if(mpz_probab_prime_p(p, 15) > 0)
+    avgtime += ((double)end - start) / CLOCKS_PER_SEC;
+
+    /*if(mpz_probab_prime_p(p, 15) > 0)
         gmp_printf(" Probably Prime n = %Zd\n", p);
     else
         gmp_printf("Composite n = %Zd\n", p);
+*/
+    //bitcount(p);
 
-    bitcount(p);
+    //printf("Tiempo de búsqueda para número primo de %d bits: %f\n segundos", nbits, ((double)end - start) / CLOCKS_PER_SEC);
 
-    printf("Tiempo de búsqueda para número primo de %d bits: %f\n segundos", nbits, ((double)end - start) / CLOCKS_PER_SEC);
+}
 
+
+    printf("Tiempo de búsqueda promedio para primo de %d bits: %f\n segundos", nbits, avgtime / numtests);
 
     //Liberación de memoria
     mpz_clear(k);
