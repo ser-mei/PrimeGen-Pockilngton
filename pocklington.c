@@ -7,7 +7,7 @@
 int floorlog(int num);
 
 //test de Pocklington
-int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r);
+int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd);
 
 //Bit count
 void bitcount(mpz_t n);
@@ -26,7 +26,7 @@ int main()
     // n = pr + 1
     // r = 2k
 
-    mpz_t k, n, p, r, randNumb, millerrabin, mrbase, nmenos1;
+    mpz_t k, n, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd;
 
     //Declaración de estado para rng
     gmp_randstate_t state;
@@ -50,6 +50,9 @@ int main()
     mpz_init(mrbase);
     mpz_init(nmenos1);
     mpz_init(randNumb);
+    mpz_init(base);
+    mpz_init(criterion);
+    mpz_init(mcd);
 
     //Inicialización de estado para rng
     gmp_randinit_mt(state);
@@ -121,8 +124,9 @@ int main()
         mpz_add_ui(n, n, 1);
 
 
-        while(!pocklingtonTest(n, p, r))
+        while(!pocklingtonTest(n, p, r, base, criterion, mcd))
         {
+//            printf("Cant find prime\n");
             //mpz_urandomb(k, state, exp);
             randomNBitOddNumber(k, exp, state);
             mpz_mul_ui(r, k, 2);
@@ -135,6 +139,7 @@ int main()
     }
 
     //bitcount(n);
+//    printf("Last phase\n");
 
     m = 1 << aux;
     //printf("logfloor de nbits = %d\n", aux);
@@ -149,7 +154,7 @@ int main()
     mpz_add_ui(n, n, 1);
 
     
-    while(!pocklingtonTest(n, p, r))
+    while(!pocklingtonTest(n, p, r, base, criterion, mcd))
     {
         randomNBitOddNumber(k, m, state);
         mpz_mul_ui(r, k, 2);
@@ -164,7 +169,7 @@ int main()
 
     avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
 
-    /*if(mpz_probab_prime_p(p, 15) > 0)
+/*    if(mpz_probab_prime_p(p, 15) > 0)
         gmp_printf(" Probably Prime n = %Zd\n", p);
     else
         gmp_printf("Composite n = %Zd\n", p);
@@ -187,6 +192,13 @@ int main()
     mpz_clear(p);
     mpz_clear(r);
     mpz_clear(randNumb);
+    mpz_clear(millerrabin);
+    mpz_clear(mrbase);
+    mpz_clear(nmenos1);
+    mpz_clear(base);
+    mpz_clear(criterion);
+    mpz_clear(mcd);
+
     gmp_randclear(state);
 
     return 0;
@@ -206,44 +218,41 @@ int floorlog(int num)
 //Revisar los memory leaks
 //Retornar en vez de asignar flag <-
 
-int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r)
+int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd)
 {
-    mpz_t base, criterion, nmenos1, mcd;
-    int flag = 0;
-    mpz_init(base);
-    mpz_init(criterion);
-    mpz_init(nmenos1);
-    mpz_init(mcd);
-
-    mpz_set(mcd, n);
-    mpz_set_ui(base, 2);
-    mpz_sub_ui(nmenos1, n, 1);
-    mpz_powm(criterion, base, r, n);
+    int flag = 0, i, bases[2] = {2, 3};
 
     //Hacer el gcd con 105
     mpz_gcd_ui(mcd, n, 105);
     if(mpz_cmp_ui(mcd, 1) != 0)
     {
         //printf("gcd with 105 failed\n");
-        flag = 0;
+        return 0;
     }
 
-    if(mpz_cmp_ui(criterion, 1) != 0)
+    for (i = 0; i < 1; i++)
     {
-        //printf("Pocklington test failed\n");
-        flag = 0;
-    }
-    mpz_powm(criterion, criterion, p, n);
-    if(mpz_cmp_ui(criterion, 1) == 0)
-    {
-        //printf("Fermat test passed in Pocklington\n");
-        flag = 1;
-    }
+        mpz_set_ui(base, bases[i]);
+        mpz_powm(criterion, base, r, n);
+        mpz_sub_ui(criterion, criterion, 1);
+        mpz_gcd(mcd, criterion, n);
 
-    mpz_clear(base);
-    mpz_clear(criterion);
-    mpz_clear(nmenos1);
-    mpz_clear(mcd);
+        if(mpz_cmp_ui(mcd, 1) != 0)
+        {
+            //printf("Pocklington test failed\n");
+            flag = 0;
+            return 0;
+        }
+        mpz_add_ui(criterion, criterion, 1);
+        mpz_powm(criterion, criterion, p, n);
+        if(mpz_cmp_ui(criterion, 1) == 0)
+        {
+            //printf("Fermat test passed in Pocklington\n");
+            flag = 1;
+            //printf("Pocklington test passed\n");
+            return 1;
+        }
+   }
 
     if(flag)
         return 1;
