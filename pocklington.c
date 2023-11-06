@@ -265,17 +265,9 @@ void bitcount(mpz_t n)
 
 void randomNBitOddNumber(mpz_t num, int nbits, gmp_randstate_t state)
 {
-    mpz_t randNumb;
-
-    mpz_init(randNumb);
-
-    mpz_ui_pow_ui(num, 2, nbits);
-    mpz_urandomb(randNumb, state, nbits);
-    if((mpz_get_ui(randNumb) & 1) == 0)
-        mpz_add_ui(randNumb, randNumb, 1);
-    mpz_add(num, num, randNumb);
-
-    mpz_clear(randNumb);
+    mpz_rrandomb(num, state, nbits);
+    if((mpz_get_ui(num) & 1) == 0)
+        mpz_add_ui(num, num, 1);
 }
 
 
