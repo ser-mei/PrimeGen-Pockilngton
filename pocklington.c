@@ -23,7 +23,7 @@ int main()
 {
     //Declaración de variables
     // n es el candidato
-    // n = 2pr + 1
+    // n = pr + 1
     // r = 2k
 
     mpz_t k, n, p, r, randNumb, millerrabin, mrbase, nmenos1;
@@ -32,7 +32,7 @@ int main()
     gmp_randstate_t state;
 
     //Variables de tiempo
-    clock_t start, end;
+    clock_t startTotal, endTotal, startTest, endTest;
 
     //Variables enteras
     //phi_n son las bases para demostrar que el primer candidato es primo
@@ -61,11 +61,13 @@ int main()
 
     printf("Enter the number of tests:\n");
     scanf("%d", &numtests);
+
+    startTotal= clock();
     
-for(j = 0; j < numtests; j++)
+    for(j = 0; j < numtests; j++)
 {
     //Inicio de medición del tiempo
-    start = clock();
+    startTest = clock();
 
     //Generación de un número primo aleatorio de 32 bits 
     //Empezar con 2^31
@@ -158,9 +160,9 @@ for(j = 0; j < numtests; j++)
 
     //gmp_printf("Número primo n = %Zd \n", p);
 
-    end = clock();
+    endTest = clock();
 
-    avgtime += ((double)end - start) / CLOCKS_PER_SEC;
+    avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
 
     /*if(mpz_probab_prime_p(p, 15) > 0)
         gmp_printf(" Probably Prime n = %Zd\n", p);
@@ -172,9 +174,12 @@ for(j = 0; j < numtests; j++)
     //printf("Tiempo de búsqueda para número primo de %d bits: %f\n segundos", nbits, ((double)end - start) / CLOCKS_PER_SEC);
 
 }
+    endTotal = clock();
 
 
-    printf("Tiempo de búsqueda promedio para primo de %d bits: %f\n segundos", nbits, avgtime / numtests);
+    printf("Tiempo de búsqueda promedio para primo de %d bits: %f segundos\n", nbits, avgtime / numtests);
+
+    printf("Tiempo de ejecución total para %d pruebas: %f segundos\n", ((double)endTotal - startTotal) / CLOCKS_PER_SEC, numtests);
 
     //Liberación de memoria
     mpz_clear(k);
