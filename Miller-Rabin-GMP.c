@@ -3,39 +3,49 @@
 #include <gmp.h>
 #include <time.h>
 
-int millerrabintest(mpz_t n, int exp, mpz_t t, mpz_t nMinus1, mpz_t base);
-
-
 int main()
 {
-    return 0;
-}
+    mpz_t num;
+    int nbits, ntests;
+    double avgtime;
+    clock_t start, end;
+    gmp_randstate_t state;
 
+    mpz_init(num);
 
-int millerrabintest(mpz_t n, int exp, mpz_t t, mpz_t nMinus1, mpz_t base)
-{
-    int i;
-    mpz_t criterion;
+    printf("Enter the number of bits: ");
+    scanf("%d", &nbits);
 
-    mpz_init(criterion);
+    printf("Enter the number of tests: ");
+    scanf("%d", &ntests);
 
-    mpz_powm_ui(criterion, base, t, n);
+    gmp_randinit_mt(state);
+    gmp_randseed_ui(state, time(NULL));
 
-    if(mpz_cmp_ui(criterion, 1) == 0 || mpz_cmp(criterion, nMinus1) == 0)
+    for(int i = 0; i < ntests; i++)
     {
-        mpz_clear(criterion);
-        return 1;
-    }
+        start = clock();
 
-    for(i = 0; i < exp; i++)
-    {
-        mpz_powm_ui(criterion, criterion, 2, n);
-        if(mpz_cmp(criterion, nMinus1) == 0)
+        mpz_rrandomb(num, state, nbits);
+        if((mpz_get_ui(num) & 1) == 0)
+            mpz_add_ui(num, num, 1);
+
+        while(mpz_probab_prime_p(num, 25) == 0)
         {
-            mpz_clear(criterion);
-            return 1;
+            mpz_rrandomb(num, state, nbits);
+            if((mpz_get_ui(num) & 1) == 0)
+                mpz_add_ui(num, num, 1);
         }
+        end = clock();
+
+        avgtime += (double)(end - start) / CLOCKS_PER_SEC;
     }
-    mpz_clear(criterion);
+
+    printf("Average time for a %d bits prime: %f segundos \n", nbits, avgtime/ntests);
+
+    mpz_clear(num);
+
+    gmp_randclear(state);
+
     return 0;
 }
