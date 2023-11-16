@@ -7,7 +7,7 @@
 int floorlog(int num);
 
 //Test de Pocklington
-int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd);
+int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t filter);
 
 // Retorna largo en bits del número
 void bitcount(mpz_t n);
@@ -27,7 +27,7 @@ int main()
     // r = 2k
     // El resto de variables se utiliza dentro de los tests de primalidad
 
-    mpz_t k, n, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd;
+    mpz_t k, n, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd, filter;
 
     //Declaración de estado para rng
     gmp_randstate_t state;
@@ -55,6 +55,7 @@ int main()
     mpz_init(base);
     mpz_init(criterion);
     mpz_init(mcd);
+    mpz_init(filter);
 
     //Inicialización de estado para rng
     gmp_randinit_mt(state);
@@ -66,6 +67,8 @@ int main()
 
     printf("Enter the number of tests:\n");
     scanf("%d", &numtests);
+
+    mpz_init_set_str(filter, "232862364358497360900063316880507363070", 10);
 
     startTotal= clock();
     
@@ -113,6 +116,7 @@ int main()
         //Ciclo para generar primos más grandes desde 2^32 hasta 2^nbits
 
         aux = floorlog(nbits);
+
         for(i = 5; i < aux; i++)
         {
             exp = 1 << i;
@@ -126,7 +130,7 @@ int main()
             mpz_mul_ui(r, k, 2);
             mpz_mul(n, r, p);
             mpz_add_ui(n, n, 1);
-            }while(!pocklingtonTest(n, p, r, base, criterion, mcd));
+            }while(!pocklingtonTest(n, p, r, base, criterion, mcd, filter));
             //{
             //    randomNBitOddNumber(k, exp, state);
             //    mpz_mul_ui(r, k, 2);
@@ -153,7 +157,7 @@ int main()
             mpz_mul_ui(r, k, 2);
             mpz_mul(n, r, p);
             mpz_add_ui(n, n, 1);
-        }while(!pocklingtonTest(n, p, r, base, criterion, mcd));
+        }while(!pocklingtonTest(n, p, r, base, criterion, mcd, filter));
 
         mpz_set(p, n);
         //gmp_printf("Número primo n = %Zd \n", p);
@@ -207,12 +211,13 @@ int floorlog(int num)
 
 // Test de Pocklington con criterio de tamaño cuadrático
 
-int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd)
+int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t filter)
 {
     int i, bases[2] = {2, 3};
 
     //gcd con 105 para descartar candidatos rápido
-    mpz_gcd_ui(mcd, n, 105);
+    //mpz_gcd_ui(mcd, n, 105);
+    mpz_gcd(mcd, n, filter);
     if(mpz_cmp_ui(mcd, 1) != 0)
     {
         //printf("gcd with 105 failed\n");

@@ -3,19 +3,19 @@
 #include <gmp.h>
 #include <time.h>
 
-//Floor function
+// Función floor de logaritmo base 3
 int floorlog(int num);
 
-//test de Pocklington
+//Test de Pocklington
 int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t k, mpz_t s, mpz_t u);
 
-//Bit count
+// Retorna largo en bits del número
 void bitcount(mpz_t n);
 
-//Random n bit odd number
+// Retorna número impar aleatorio de n-bits
 void randomNBitOddNumber(mpz_t num, int nbits, gmp_randstate_t state);
 
-//test de Miller-Rabin
+//Test de Miller-Rabin
 int millerrabintest(mpz_t n, int exp, mpz_t t, mpz_t nMinus1, mpz_t base);
 
 
@@ -72,149 +72,128 @@ int main()
 
     for(j = 0; j < numtests; j++)
     {
-    //Inicio de medición del tiempo
-    startTest = clock();
+        startTest = clock();
+        proof = 0;
 
-    //Generación de un número primo aleatorio de 32 bits 
-    //Empezar con 2^31
+        //Generación de un número primo aleatorio de 32 bits 
+        //Empezar con 2^31
 
-    randomNBitOddNumber(p, 27, state);
-    //gmp_printf("Candidate p = %Zd\n", p);
-
-    //El primer primo debe ser primo demostrado
-    //Se puede partir con un gcd con 105
-    //luego se puede hacer con Miller-Rabin con 4 bases phi_4
-
-    while(!proof)
-    {
+        randomNBitOddNumber(p, 27, state);
         //gmp_printf("Candidate p = %Zd\n", p);
-        mpz_gcd_ui(randNumb, p, 105);
-        if(mpz_cmp_ui(randNumb, 1) == 0)
+
+        //El primer primo debe ser primo demostrado
+        //Se puede hacer con Miller-Rabin con 4 bases phi_4
+
+        while(!proof)
         {
-            mpz_sub_ui(nmenos1, p, 1);
-            mrfactor = mpz_scan1(nmenos1, 0);
-            mpz_tdiv_q_2exp(millerrabin, p, mrfactor);
- 
-            for(i=0; i<4; i++)
+            //gmp_printf("Candidate p = %Zd\n", p);
+            mpz_gcd_ui(randNumb, p, 105);
+            if(mpz_cmp_ui(randNumb, 1) == 0)
             {
-                mpz_set_ui(mrbase, phi[i]);
-                if(millerrabintest(p, mrfactor, millerrabin, nmenos1, mrbase) != 1)
+                mpz_sub_ui(nmenos1, p, 1);
+                mrfactor = mpz_scan1(nmenos1, 0);
+                mpz_tdiv_q_2exp(millerrabin, p, mrfactor);
+ 
+                for(i=0; i<4; i++)
                 {
-                    randomNBitOddNumber(p, 27, state);
-                    break;
+                    mpz_set_ui(mrbase, phi[i]);
+                    if(millerrabintest(p, mrfactor, millerrabin, nmenos1, mrbase) != 1)
+                    {
+                        randomNBitOddNumber(p, 27, state);
+                        break;
+                    }
                 }
+                if(i == 4)
+                    proof = 1;
             }
-            if(i == 4)
-                proof = 1;
+            else
+                randomNBitOddNumber(p, 27, state);
         }
-        else
-            randomNBitOddNumber(p, 27, state);
-    }
 
-    //gmp_printf("Primer primo p demostrado = %Zd\n", p);
+        //gmp_printf("Primer primo p demostrado = %Zd\n", p);
 
-    //Ciclo para generar primos más grandes acotado por el log base 3 de nbits
-    aux = floorlog(nbits);
+        //Ciclo para generar primos más grandes acotado por el log base 3 de nbits
+        aux = floorlog(nbits);
 
-    //exponente base 3
-    exp = 9;
+        //exponente base 3
+        exp = 9;
 
-    for(i = 3; i < aux; i++)
-    {
-        exp *= 3;
-
-        //printf("exponente = 3^%d = %d\n", i, exp);
-
-        do
+        for(i = 3; i < aux; i++)
         {
-            randomNBitOddNumber(k, exp, state);
-            mpz_gcd(r, k, p);
-        } while (mpz_cmp_ui(r, 1) != 0);
+            exp *= 3;
+
+            //printf("exponente = 3^%d = %d\n", i, exp);
+
+            do
+            {
+                randomNBitOddNumber(k, exp, state);
+                mpz_gcd(r, k, p);
+            }while(mpz_cmp_ui(r, 1) != 0);
         
-        //Check if k < p^2 + 1
-        //mpz_mul(r, p, p);
-        //mpz_mul_ui(r, r, 2);
-        //mpz_add_ui(r,r,2);
-        //if(mpz_cmp(k, r) < 0)
-        //    printf("LEGAL\n");
-        //else
-        //    printf("ILLEGAL\n");
+            //Revisa criterio de tamaño k < p^2 + 1
+            //mpz_mul(r, p, p);
+            //mpz_mul_ui(r, r, 2);
+            //mpz_add_ui(r,r,2);
+            //if(mpz_cmp(k, r) < 0)
+            //    printf("LEGAL\n");
+            //else
+            //    printf("ILLEGAL\n");
 
-        //mpz_fdiv_qr(u, s, k, p);
-        //gmp_printf(" FDIV: k = %Zd = %Zd * %Zd + %Zd\n", k, u, p, s);
-        //mpz_cdiv_qr(u, s, k, p);
-        //gmp_printf("CDIV: k = %Zd = %Zd * %Zd + %Zd\n", k, u, p, s);
-        //mpz_tdiv_qr(u, s, k, p);
-        //gmp_printf("TDIV: k = %Zd = %Zd * %Zd + %Zd + %Zd\n", k, u, p, s);
-
-
-
-        mpz_mul_ui(r, k, 2);
-        mpz_mul(n, r, p);
-        mpz_add_ui(n, n, 1);
-
-
-        while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u))
-        {
-//            printf("Cant find prime\n");
-            //mpz_urandomb(k, state, exp);
-            randomNBitOddNumber(k, exp, state);
             mpz_mul_ui(r, k, 2);
             mpz_mul(n, r, p);
             mpz_add_ui(n, n, 1);
+
+
+            while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u))
+            {
+                //printf("Cant find prime\n");
+                //mpz_urandomb(k, state, exp);
+                randomNBitOddNumber(k, exp, state);
+                mpz_mul_ui(r, k, 2);
+                mpz_mul(n, r, p);
+                mpz_add_ui(n, n, 1);
+            }
+
+            //gmp_printf("prime n = %Zd = %Zd * %Zd + 1\n", n, p, r);
+            mpz_set(p, n);
+            //bitcount(n);
         }
 
-        //gmp_printf("prime n = %Zd = %Zd * %Zd + 1\n", n, p, r);
+        // Ajuste de bits para el último primo
+        m = exp+exp/2;
+        //printf("logfloor de nbits = %d\n", aux);
+        //printf("m = %d\n", m);
+        m = nbits - m;
+        //printf("m = %d\n", m);
+
+        do
+        {
+            randomNBitOddNumber(k, m, state);
+            mpz_mul_ui(r, k, 2);
+            mpz_mul(n, r, p);
+            mpz_add_ui(n, n, 1);
+        }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u));
+
         mpz_set(p, n);
-        //bitcount(n);
+
+        //gmp_printf("Número primo n = %Zd \n", p);
+
+        endTest = clock();
+
+        avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
+
+        if(mpz_probab_prime_p(p, 15) == 0)
+            errorcount += 1;
+
+        //bitcount(p);
+        //printf("Tiempo de búsqueda para número primo de %d bits: %f\n segundos", nbits, ((double)end - start) / CLOCKS_PER_SEC);
     }
 
-//    printf("Last phase\n");
-
-    // Ajuste de bits para el último primo
-    m = exp+exp/2;
-    //printf("logfloor de nbits = %d\n", aux);
-    //printf("m = %d\n", m);
-    m = nbits - m;
-    //printf("m = %d\n", m);
-
-
-    randomNBitOddNumber(k, m, state);
-    mpz_mul_ui(r, k, 2);
-    mpz_mul(n, r, p);
-    mpz_add_ui(n, n, 1);
-
-    
-    while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u))
-    {
-        randomNBitOddNumber(k, m, state);
-        mpz_mul_ui(r, k, 2);
-        mpz_mul(n, r, p);
-        mpz_add_ui(n, n, 1);
-    }
-    mpz_set(p, n);
-
-    //gmp_printf("Número primo n = %Zd \n", p);
-
-    endTest = clock();
-
-    avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
-
-    if(mpz_probab_prime_p(p, 15) == 0)
-        errorcount += 1;
-
-    //bitcount(p);
-
-    //printf("Tiempo de búsqueda para número primo de %d bits: %f\n segundos", nbits, ((double)end - start) / CLOCKS_PER_SEC);
-
-}
     endTotal = clock();
 
 
     printf("Tiempo de búsqueda promedio para primo de %d bits: %f segundos\n", nbits, avgtime / numtests);
-
     printf("Tiempo de ejecución total para %d pruebas: %f segundos\n", ((double)endTotal - startTotal) / CLOCKS_PER_SEC, numtests);
-
     printf("Errores : %d\n", errorcount);
 
     //Liberación de memoria
@@ -232,7 +211,6 @@ int main()
     mpz_clear(u);
     mpz_clear(s);
 
-
     gmp_randclear(state);
 
     return 0;
@@ -249,14 +227,14 @@ int floorlog(int num)
     return i;
 }
 
-//Revisar los memory leaks
-//Retornar en vez de asignar flag <-
+// Test de Pocklington con criterio de tamaño cúbico
+//
 
 int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t k, mpz_t s, mpz_t u)
 {
-    int flag = 0, i, bases[2] = {2, 3};
+    int i, bases[2] = {2, 3};
 
-    //Hacer el gcd con 105
+    //gcd con 105
     mpz_gcd_ui(mcd, n, 105);
     if(mpz_cmp_ui(mcd, 1) != 0)
     {
@@ -264,7 +242,7 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_
         return 0;
     }
 
-    for (i = 0; i < 1; i++)
+    for (i = 0; i < 2; i++)
     {
         mpz_set_ui(base, bases[i]);
         mpz_powm(criterion, base, r, n);
@@ -274,17 +252,17 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_
         if(mpz_cmp_ui(mcd, 1) != 0)
         {
             //printf("Pocklington test failed\n");
-            flag = 0;
             return 0;
         }
+
         mpz_add_ui(criterion, criterion, 1);
         mpz_powm(criterion, criterion, p, n);
         if(mpz_cmp_ui(criterion, 1) == 0)
         {
-            //printf("Fermat test passed in Pocklington\n");
-            flag = 1;
             //printf("Pocklington test passed\n");
 
+            //Revisión de tercera condición del criterio:
+            // r = u*p + s, con u impar o que se cumpla que u es par y s^2-4u no es cuadrado perfecto
             mpz_fdiv_qr(u, s, k, p);
 
             if(mpz_get_ui(s) & 1)
@@ -302,16 +280,9 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_
                 else
                     return 0;
             }
-
-            return 1;
         }
-   }
-
-    if(flag)
-        return 1;
-    else
-        return 0;
-
+    }
+    return 0;
 }
 
 void bitcount(mpz_t n)
