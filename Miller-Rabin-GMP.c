@@ -7,7 +7,7 @@ int main()
 {
     mpz_t num;
     int nbits, ntests;
-    double avgtime;
+    double avgtime = 0;
     clock_t start, end;
     gmp_randstate_t state;
 

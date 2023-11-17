@@ -177,7 +177,7 @@ int main()
     endTotal = clock();
 
     printf("Tiempo de búsqueda promedio para primo de %d bits: %f segundos\n", nbits, avgtime / numtests);
-    printf("Tiempo de ejecución total para %d pruebas: %f segundos\n", ((double)endTotal - startTotal) / CLOCKS_PER_SEC, numtests);
+    printf("Tiempo de ejecución total para %d pruebas: %f segundos\n", numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC);
     printf("Errores: %d\n", errorcount);
 
     //Liberación de memoria
