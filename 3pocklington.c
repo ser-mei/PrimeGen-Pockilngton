@@ -114,6 +114,7 @@ int main()
 
         //Ciclo para generar primos más grandes acotado por el log base 3 de nbits
         aux = floorlog(nbits);
+        printf("logfloor base 3 de nbits = %d\n", aux);
 
         //exponente base 3^3 y multiplicado por 2 para ajustar el tamaño del segundo primo generado
         exp = 9*2;
@@ -248,7 +249,7 @@ int main()
 int floorlog(int num)
 {
     int i = 0;
-    while(num > 1)
+    while(num >= 1)
     {
         num = num / 3;
         i++;

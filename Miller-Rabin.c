@@ -20,7 +20,7 @@ int main()
 
     clock_t start, end;
 
-    mpz_t rand_num, rand_base, n_minus_one, factor, criterion;
+    mpz_t rand_num, rand_base, n_minus_one, factor, criterion, mcd;
 
     gmp_randstate_t state;
 
@@ -30,6 +30,8 @@ int main()
     mpz_init(n_minus_one);
     mpz_init(factor);
     mpz_init(criterion);
+    mpz_init(mcd);
+
     gmp_randinit_mt(state);
 
     // Seed the random state
@@ -43,6 +45,9 @@ int main()
     printf("Enter the number of tests: ");
     scanf("%d", &numtest);
 
+
+    trials = 25;
+
     for(int j = 0; j < numtest; j++)
     {
 
@@ -53,21 +58,26 @@ int main()
     while(!flag2)
     {
 
-    flag = 1;
+        flag = 1;
 
-    // Generate random number with n-bits
-    //mpz_urandomb(rand_num, state, nbits);
-    nBitNumber(rand_num, nbits, state);
+        // Generate random number with n-bits
+        //mpz_urandomb(rand_num, state, nbits);
+        nBitNumber(rand_num, nbits, state);
 
-    //if the number is even, add 1 to make it odd
-    //if ((mpz_get_ui(rand_num) & 1) == 0) 
-    //    mpz_add_ui(rand_num, rand_num, 1);
-    
+        //if the number is even, add 1 to make it odd
+        //if ((mpz_get_ui(rand_num) & 1) == 0) 
+        //    mpz_add_ui(rand_num, rand_num, 1);
+
+        mpz_gcd_ui(mcd, rand_num, 105);   
+
+    if(mpz_cmp_ui(mcd, 1) != 0)
+        flag = 0;
+    else
+    {
     //printf("Enter the number of trials: ");
     //scanf("%d", &trials);
-    trials = 25;
 
-    //factoring out powers of 2 from n-1
+    //Declaración de n-1
     mpz_sub_ui(n_minus_one, rand_num, 1);
 
     //La posición del primer 1 menos significante es la cantidad de 2 que se pueden factorizar 
@@ -91,26 +101,28 @@ int main()
     //else
     //    flag = 0;
 
-    if(flag == 1)
-    {
-        //gmp_printf("Probable prime number: %Zd\n", rand_num);
-        flag2 = 1;
     }
+
+        if(flag == 1)
+        {
+            //gmp_printf("Probable prime number: %Zd\n", rand_num);
+            flag2 = 1;
+        }
 
     }
 
     end = clock();
     avgtime += (double)(end - start) / CLOCKS_PER_SEC;
 
-//    if(mpz_probab_prime_p(rand_num, 25) > 0)
-//        count += 1;
+    if(mpz_probab_prime_p(rand_num, 25) == 0)
+        count += 1;
 //    else
 //        printf("GMP says it's composite\n");
     }
 
     //printf("Time: %f segundos \n", (double)(end - start) / CLOCKS_PER_SEC);
     printf("Average time for a %d bits prime: %f segundos \n", nbits, avgtime/numtest);
-    printf("Number of primes found: %d\n", count);
+    printf("Number of errors: %d\n", count);
 
 
 
@@ -120,6 +132,7 @@ int main()
     mpz_clear(n_minus_one);
     mpz_clear(factor);
     mpz_clear(criterion);
+    mpz_clear(mcd);
 
     gmp_randclear(state);
 
@@ -152,6 +165,6 @@ int millerrabintest(mpz_t n, int exp, mpz_t t, mpz_t nMinus1, mpz_t base, mpz_t 
 void nBitNumber(mpz_t rand_num, int nbits, gmp_randstate_t state)
 {
     mpz_rrandomb(rand_num, state, nbits);
-    if(mpz_get_ui(rand_num) & 1 == 0)
+    if((mpz_get_ui(rand_num) & 1) == 0)
         mpz_add_ui(rand_num, rand_num, 1);
 }

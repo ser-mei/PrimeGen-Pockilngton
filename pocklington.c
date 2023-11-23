@@ -216,8 +216,8 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_
     int i, bases[2] = {2, 3};
 
     //gcd con 105 para descartar candidatos rápido
-    //mpz_gcd_ui(mcd, n, 105);
-    mpz_gcd(mcd, n, filter);
+    mpz_gcd_ui(mcd, n, 105);
+    //mpz_gcd(mcd, n, filter);
     if(mpz_cmp_ui(mcd, 1) != 0)
     {
         //printf("gcd with 105 failed\n");
