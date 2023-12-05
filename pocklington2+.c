@@ -102,8 +102,10 @@ int main()
                     mpz_add_ui(prime, prime, 1);
                     mpz_mul_si(r, s, -2);
 
-                    if(pocklingtonTest(prime, n[j], r, base, criterion, mcd) == 1)
+                    if(mpz_probab_prime_p(prime, 1) != 0)
                     {
+                        if(pocklingtonTest(prime, n[j], r, base, criterion, mcd) == 1)
+                        {
                         //gmp_printf("Primo--+strong generado: %Zd\n", prime);
 
                         //mpz_add_ui(mcd, prime, 1);
@@ -113,8 +115,9 @@ int main()
                         //if(mpz_cmp(mcd, r) == 0)
                         //    printf("N+1 = 2tq -> Primo--+strong\n");
                         //bitcount(prime);
-                        flag = 1;
-                        break;
+                            flag = 1;
+                            break;
+                        }
                     }
                 }
                 else
@@ -124,8 +127,10 @@ int main()
                     mpz_add_ui(prime, prime, 1);
                     mpz_mul_si(r, t, -2);
 
-                    if(pocklingtonTest(prime, n[primecount - 1], r, base, criterion, mcd) == 1)
+                    if(mpz_probab_prime_p(prime, 1) != 0)
                     {
+                        if(pocklingtonTest(prime, n[primecount - 1], r, base, criterion, mcd) == 1)
+                        {
                         //gmp_printf("Primo--+strong generado: %Zd\n", prime);
 
                         //mpz_add_ui(mcd, prime, 1);
@@ -136,8 +141,9 @@ int main()
                         //    printf("N+1 = 2sp -> Primo--+strong\n");
 
                         //bitcount(prime);
-                        flag = 1;
-                        break;
+                            flag = 1;
+                            break;
+                        }
                     }
                 }
                 //else
@@ -182,7 +188,7 @@ int main()
     printf("Tiempo de ejecución total para %d pruebas: %f segundos\n", numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC);
     printf("Errores: %d\n", errorcount);
 
-    printf("Primos generados para encontrar un primo--+strong: %d\n", trycount);
+    printf("Primos generados para encontrar un primo--+strong: %d y %d\n", trycount, totalprimes);
 
     //Liberación de memoria
     for(i = 0; i < totalprimes; i++)
