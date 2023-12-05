@@ -88,7 +88,7 @@ int main()
 
         while(!proof)
         {
-            mpz_gcd_ui(randNumb, p, 105);
+            mpz_gcd_ui(randNumb, p, 15015);
             if(mpz_cmp_ui(randNumb, 1) == 0)
             {
                 mpz_sub_ui(nmenos1, p, 1);
@@ -128,7 +128,8 @@ int main()
             {
                 do
                 {
-                    randomNBitOddNumber(k, exp, state);
+                    //randomNBitOddNumber(k, exp, state);
+                    mpz_rrandomb(k, state, exp-1);
                     mpz_mul_ui(r, k, 2);
                     mpz_mul(n, r, p);
                     mpz_add_ui(n, n, 1);
@@ -158,7 +159,8 @@ int main()
         {
             do
             {
-                randomNBitOddNumber(k, m, state);
+                //randomNBitOddNumber(k, m, state);
+                mpz_rrandomb(k, state, m-1);
                 mpz_mul_ui(r, k, 2);
                 mpz_mul(n, r, p);
                 mpz_add_ui(n, n, 1);
@@ -177,7 +179,7 @@ int main()
         if(mpz_probab_prime_p(p, 15) == 0)
             errorcount += 1;
     
-        //bitcount(p);
+        bitcount(p);
 
         //printf("Tiempo de búsqueda para número primo de %d bits: %f\n segundos", nbits, ((double)end - start) / CLOCKS_PER_SEC);
     }
