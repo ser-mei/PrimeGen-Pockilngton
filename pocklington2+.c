@@ -19,7 +19,7 @@ void randomNBitOddNumber(mpz_t num, int nbits, gmp_randstate_t state);
 int millerrabintest(mpz_t n, int exp, mpz_t t, mpz_t nMinus1, mpz_t base);
 
 //Generador de números primos de nbits en base a Pocklington cuadrático
-void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state);
+void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state, mpz_t k, mpz_t p, mpz_t r, mpz_t randNumb, mpz_t millerrabin, mpz_t mrbase, mpz_t nmenos1, mpz_t base, mpz_t criterion, mpz_t mcd);
 
 
 int main()
@@ -28,6 +28,7 @@ int main()
     //Declaración de variables
     mpz_t *n;
     mpz_t mcd, s,t, prime, r, base, criterion;
+    mpz_t k, p, randNumb, millerrabin, mrbase, nmenos1;
 
     //Declaración de estado para rng
     gmp_randstate_t state;
@@ -38,7 +39,7 @@ int main()
     //Variables enteras
     //phi_n son las bases para demostrar que el primer candidato es primo con test de Miller-Rabin
 
-    int i, j, k, nbits, numtests, errorcount = 0, primecount, trycount = 0, flag, totalprimes = 2;
+    int i, j, nbits, numtests, errorcount = 0, primecount, trycount = 0, flag, totalprimes = 2;
     double avgtime = 0;
 
     //Arreglo de mpz_t de tamaño 2
@@ -54,7 +55,12 @@ int main()
     mpz_init(r);
     mpz_init(base);
     mpz_init(criterion);
-
+    mpz_init(k);
+    mpz_init(p);
+    mpz_init(randNumb);
+    mpz_init(millerrabin);
+    mpz_init(mrbase);
+    mpz_init(nmenos1);
 
     //Inicialización de estado para rng
     gmp_randinit_mt(state);
@@ -75,8 +81,8 @@ int main()
     {
         startTest = clock();
 
-        primeGenPocklington2(nbits/2, n[0], state);
-        primeGenPocklington2(nbits/2, n[1], state);
+        primeGenPocklington2(nbits/2, n[0], state, k, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd);
+        primeGenPocklington2(nbits/2, n[1], state, k, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd);
         primecount = 2;
 
         //for(j = 0; j < primecount-1; j++)
@@ -159,7 +165,7 @@ int main()
                 totalprimes += 1;
             }
 
-            primeGenPocklington2(nbits/2, n[primecount - 1], state);
+            primeGenPocklington2(nbits/2, n[primecount - 1], state, k, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd);
             //printf("Primo generado\n");
 
         }
@@ -189,6 +195,12 @@ int main()
     mpz_clear(r);
     mpz_clear(base);
     mpz_clear(criterion);
+    mpz_clear(k);
+    mpz_clear(p);
+    mpz_clear(randNumb);
+    mpz_clear(millerrabin);
+    mpz_clear(mrbase);
+    mpz_clear(nmenos1);
 
 
     free(n);
@@ -311,7 +323,7 @@ int millerrabintest(mpz_t n, int exp, mpz_t t, mpz_t nMinus1, mpz_t base)
     return 0;
 }
 
-void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state)
+void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state, mpz_t k, mpz_t p, mpz_t r, mpz_t randNumb, mpz_t millerrabin, mpz_t mrbase, mpz_t nmenos1, mpz_t base, mpz_t criterion, mpz_t mcd)
 {
     //Declaración de variables
     // n es el candidato
@@ -319,7 +331,6 @@ void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state)
     // r = 2k
     // El resto de variables se utiliza dentro de los tests de primalidad
 
-    mpz_t k, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd;
 
 
     int i, aux, exp, m, proof = 0;
@@ -327,18 +338,6 @@ void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state)
     unsigned long mrfactor;
 
     //Inicialización de variables de gmp
-    mpz_init(k);
-    mpz_init(p);
-    mpz_init(r);
-    mpz_init(millerrabin);
-    mpz_init(mrbase);
-    mpz_init(nmenos1);
-    mpz_init(randNumb);
-    mpz_init(base);
-    mpz_init(criterion);
-    mpz_init(mcd);
-
-
 
         //Generación de un número primo aleatorio de 32 bits 
         //Empezar con candidato de 2^31
@@ -435,14 +434,4 @@ void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state)
         //gmp_printf("Número primo n = %Zd \n", p);
 
     //Liberación de memoria
-    mpz_clear(k);
-    mpz_clear(p);
-    mpz_clear(r);
-    mpz_clear(randNumb);
-    mpz_clear(millerrabin);
-    mpz_clear(mrbase);
-    mpz_clear(nmenos1);
-    mpz_clear(base);
-    mpz_clear(criterion);
-    mpz_clear(mcd);
 }
