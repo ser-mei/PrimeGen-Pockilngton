@@ -39,7 +39,7 @@ int main()
     //phi_n son las bases para demostrar que el primer candidato es primo
     int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0;
     int phi[4] = {2, 3, 5, 7}, stages[10];
-    int j, numtests, counter[2] = {0, 0}, tries = 0;
+    int j, numtests, counter[2] = {0, 0}, tries = 0, initial = 0;
     double avgtime = 0;
 
     //Inicialización de variables de gmp
@@ -79,6 +79,9 @@ int main()
         //Ciclo para generar primos más grandes acotado por el log base 3 de nbits
         aux = floorlog(nbits, stages);
         //printf("logfloor base 3 de nbits = %d\n", aux);
+        initial = stages[0] + 1;
+        printf("initial = %d\n", initial);
+
         //for(i = 0; i < aux; i++)
         //    printf("stages[%d] = %d\n", i, stages[i]);
 
@@ -86,7 +89,7 @@ int main()
         //Empezar con 2^27
 
         //randomNBitOddNumber(p, 27, state);
-        randomNBitOddNumber(p, 27, state);
+        randomNBitOddNumber(p, initial, state);
         //gmp_printf("Candidate p = %Zd\n", p);
 
         //El primer primo debe ser primo demostrado
@@ -107,7 +110,7 @@ int main()
                     mpz_set_ui(mrbase, phi[i]);
                     if(millerrabintest(p, mrfactor, millerrabin, nmenos1, mrbase) != 1)
                     {
-                        randomNBitOddNumber(p, 27, state);
+                        randomNBitOddNumber(p, initial, state);
                         break;
                     }
                 }
@@ -115,7 +118,7 @@ int main()
                     proof = 1;
             }
             else
-                randomNBitOddNumber(p, 27, state);
+                randomNBitOddNumber(p, initial, state);
         }
 
         //printf("Primer primo demostrado\n");
@@ -125,14 +128,14 @@ int main()
 
 
         //exponente base 3^3 y multiplicado por 2 para ajustar el tamaño del segundo primo generado
-        exp = 9*2;
+        //exp = 9*2;
+        exp = initial*2;
 
-        for(i = 3; i < aux; i++)
+        for(i = 1; i < aux; i++)
         {
-            exp = exp*3;
             //exp = stages[aux-i]*2;
 
-            //printf("exponente = 3^%d = %d\n", i, exp);
+            //printf("Exponente ciclo %d = %d\n", i, exp);
 
             do
             {
@@ -162,39 +165,42 @@ int main()
             //else
             //    printf("ILLEGAL------------------------------------------------------------------\n");
             
-            //printf("Bits de k");
-            //bitcount(k);
-            //printf("Bits de p");
-            //bitcount(p);
+            printf("Bits de k");
+            bitcount(k);
+            printf("Bits de p");
+            bitcount(p);
 
             //gmp_printf("prime n = %Zd = %Zd * %Zd + 1\n", n, p, r);
             mpz_set(p, n);
-            //printf("Bits del primo n\n");
-            //bitcount(n);
+            printf("Bits del primo n ");
+            bitcount(n);
+
+            exp = exp*3;
         }
 
         // Ajuste de bits para el último primo
-        m = exp*3/2;
+        m = exp;
+        m -= (exp/2*3 - nbits);
         //printf("logfloor de nbits = %d\n", aux);
-        //printf("m = %d\n", m);
-        m = nbits - m;
-        //printf("m = %d\n", m);
+        //printf("m es exp*3/2 = %d\n", m);
+        //m = nbits - m;
+        printf("m diff = %d\n", m);
 
         do
         {
             do
             {
-                if(m < exp*3/2)
-                    randomNBitOddNumber(k, m-1, state);
-                else
-                {
+                //if(m < exp*3/2)
+                //    randomNBitOddNumber(k, m-1, state);
+                //else
+                //{
                     do
                     {
                         //randomNBitOddNumber(k, m-1, state);
                         mpz_rrandomb(k, state, m-1);
                         mpz_mod(r, k, p);
                     }while(mpz_cmp_ui(r, 0) == 0);
-                }
+                //}
 
                 mpz_mul_ui(r, k, 2);
                 mpz_mul(n, r, p);
@@ -212,10 +218,10 @@ int main()
         //else
         //    printf("ILLEGAL------------------------------------------------------------------\n");
 
-        //printf("Bits de k ");
-        //bitcount(k);
-        //printf("Bits de p ");
-        //bitcount(p);
+        printf("Bits de k ");
+        bitcount(k);
+        printf("Bits de p ");
+        bitcount(p);
         
 
         mpz_set(p, n);
@@ -231,8 +237,8 @@ int main()
         if(mpz_probab_prime_p(p, 15) == 0)
             errorcount += 1;
 
-        //printf("Bits del primo n:\n");
-        //bitcount(p);
+        printf("Bits del primo n: ");
+        bitcount(p);
         //printf("Tiempo de búsqueda para número primo de %d bits: %f\n segundos", nbits, ((double)end - start) / CLOCKS_PER_SEC);
     }
 
@@ -269,10 +275,10 @@ int main()
 int floorlog(int num, int *stages)
 {
     int i = 0;
-    while(num >= 3)
+    while(num > 27)
     {
         num = num / 3;
-        //stages[i] = num;
+        stages[0] = num;
         i++;
     }
     return i;
@@ -317,7 +323,7 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_
             mpz_fdiv_qr(u, s, k, p);
             //gmp_printf("k = %Zd * p + %Zd\n", u, s);
 
-            if(mpz_get_ui(s) & 1)
+            if(mpz_get_ui(u) & 1)
             {
                 //printf("s is odd\n");
                 //counter[0] += 1;
