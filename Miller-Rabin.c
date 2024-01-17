@@ -2,12 +2,9 @@
 #include <gmp.h>
 #include <time.h>
 
-
 int millerrabintest(mpz_t n, int exp, mpz_t t, mpz_t nMinus1, mpz_t base, mpz_t criterion);
 
 void nBitNumber(mpz_t rand_num, int nbits, gmp_randstate_t state);
-
-
 
 int main()
 {
@@ -18,7 +15,7 @@ int main()
     double avgtime = 0;
     int count = 0;
 
-    clock_t start, end;
+    clock_t start, end, starttotal, endtotal;
 
     mpz_t rand_num, rand_base, n_minus_one, factor, criterion, mcd;
 
@@ -45,8 +42,12 @@ int main()
     printf("Enter the number of tests: ");
     scanf("%d", &numtest);
 
+    printf("Enter the number of trials: ");
+    scanf("%d", &trials);
 
-    trials = 25;
+    //trials = 25;
+
+    starttotal = clock();
 
     for(int j = 0; j < numtest; j++)
     {
@@ -68,12 +69,12 @@ int main()
         //if ((mpz_get_ui(rand_num) & 1) == 0) 
         //    mpz_add_ui(rand_num, rand_num, 1);
 
-        mpz_gcd_ui(mcd, rand_num, 105);   
+        //mpz_gcd_ui(mcd, rand_num, 105);
 
-    if(mpz_cmp_ui(mcd, 1) != 0)
-        flag = 0;
-    else
-    {
+    //if(mpz_cmp_ui(mcd, 1) != 0)
+    //    flag = 0;
+    //else
+    //{
     //printf("Enter the number of trials: ");
     //scanf("%d", &trials);
 
@@ -101,7 +102,7 @@ int main()
     //else
     //    flag = 0;
 
-    }
+    //}
 
         if(flag == 1)
         {
@@ -120,8 +121,11 @@ int main()
 //        printf("GMP says it's composite\n");
     }
 
+    endtotal = clock();
+
     //printf("Time: %f segundos \n", (double)(end - start) / CLOCKS_PER_SEC);
     printf("Average time for a %d bits prime: %f segundos \n", nbits, avgtime/numtest);
+    printf("Total time: %f segundos \n", (double)(endtotal - starttotal) / CLOCKS_PER_SEC);
     printf("Number of errors: %d\n", count);
 
 
