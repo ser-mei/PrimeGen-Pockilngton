@@ -78,7 +78,7 @@ int main()
 
         //Ciclo para generar primos más grandes acotado por el log base 3 de nbits
         aux = floorlog(nbits, stages);
-        initial = stages[0] + 1;
+        initial = stages[0] + 2;
 
         //Generación de un número primo aleatorio de 27 bits 
         //Empezar con 2^27
@@ -103,7 +103,8 @@ int main()
                     break;
                 }
             }
-            if(i == 4 && mpz_sizeinbase(p, 2) == initial)
+            //if(i == 4 && mpz_sizeinbase(p, 2) == initial)
+            if(i == 4)
                 proof = 1;
         }
 
@@ -122,6 +123,7 @@ int main()
                     do
                     {
                         mpz_rrandomb(k, state, exp-1);
+                    //}while(mpz_cmp(k, psqr) > 0 && mpz_sizeinbase(k, 2) != exp-1);
                     }while(mpz_cmp(k, psqr) > 0);
 
                     mpz_gcd(r, k, p);
@@ -130,7 +132,7 @@ int main()
                 mpz_mul_ui(r, k, 2);
                 mpz_mul(n, r, p);
                 mpz_add_ui(n, n, 1);
-            }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u, counter)); 
+            }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u, counter));
             
             //Revisa el criterio de tamaño k < p^2+1
             //mpz_mul(r, p, p);
@@ -147,7 +149,7 @@ int main()
             mpz_set(p, n);
             //printf("Bits del primo n ");
             //bitcount(n);
-            //printf("bitsize = %d\n", mpz_sizeinbase(p, 2));
+            printf("bitsize = %d\n", mpz_sizeinbase(p, 2));
 
             expver = expver*3;
             exp = mpz_sizeinbase(p, 2)*2;
@@ -157,7 +159,7 @@ int main()
         //printf("exp = %d\n", exp);
         //printf("expver = %d\n", expver);
         m = nbits - exp/2;
-        //printf("m = %d\n", m);
+        printf("m = %d\n", m);
 
         //printf("Cubic\n");
 
@@ -192,7 +194,7 @@ int main()
 
         endTest = clock();
 
-        //printf("Prime bitsize = %d\n", mpz_sizeinbase(p, 2));
+        printf("Prime bitsize = %d\n", mpz_sizeinbase(p, 2));
 
         avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
 

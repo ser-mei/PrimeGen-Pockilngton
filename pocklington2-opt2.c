@@ -75,7 +75,7 @@ int main()
         startTest = clock();
 
         aux = floorlog(nbits, initial);
-        initialStart = initial[0]+1;
+        initialStart = initial[0] + 2;
 
         proof = 0;
 
