@@ -149,7 +149,7 @@ int main()
             mpz_set(p, n);
             //printf("Bits del primo n ");
             //bitcount(n);
-            printf("bitsize = %d\n", mpz_sizeinbase(p, 2));
+            //printf("bitsize = %d\n", mpz_sizeinbase(p, 2));
 
             expver = expver*3;
             exp = mpz_sizeinbase(p, 2)*2;
@@ -159,7 +159,7 @@ int main()
         //printf("exp = %d\n", exp);
         //printf("expver = %d\n", expver);
         m = nbits - exp/2;
-        printf("m = %d\n", m);
+        //printf("m = %d\n", m);
 
         //printf("Cubic\n");
 
@@ -194,7 +194,7 @@ int main()
 
         endTest = clock();
 
-        printf("Prime bitsize = %d\n", mpz_sizeinbase(p, 2));
+        //printf("Prime bitsize = %d\n", mpz_sizeinbase(p, 2));
 
         avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
 
