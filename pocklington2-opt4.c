@@ -91,7 +91,7 @@ int main()
 
         while(!proof)
         {
-            mpz_mcd_ui(mcd, p, 255255);
+            mpz_gcd_ui(mcd, p, 255255);
             if(mpz_cmp_ui(mcd, 1) == 0)
             {
                 mpz_sub_ui(nmenos1, p, 1);
