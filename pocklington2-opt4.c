@@ -4,7 +4,7 @@
 #include <time.h>
 
 //Función floor de logaritmo base 2
-int floorlog(int num);
+int floorlog(int num, int initial[1]);
 
 //Test de Pocklington
 int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd);
@@ -38,7 +38,7 @@ int main()
     //Variables enteras
     //phi_n son las bases para demostrar que el primer candidato es primo con test de Miller-Rabin
 
-    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0;
+    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0, initial[1], initialStart;
     int phi[4] = {2, 3, 5, 7};
     int j, numtests, bsize, sizediff = 0;
     double avgtime = 0;
@@ -70,26 +70,28 @@ int main()
 
     startTotal= clock();
 
-    //Filtro para gcd, es el producto de todos los primos desde 2 a 101
     mpz_set_str(filter, "232862364358497360900063316880507363070", 10);
     
     for(j = 0; j < numtests; j++)
     {
         startTest = clock();
 
+        aux = floorlog(nbits, initial);
+        initialStart = initial[0] + 2;
+
         proof = 0;
 
         //Generación de un número primo aleatorio de 32 bits 
         //Empezar con candidato de 2^31
 
-        randomNBitOddNumber(p, 32, state);
+        randomNBitOddNumber(p, initialStart, state);
 
         //El primer primo se demuestra con Miller-Rabin
         //El ciclo termina cuando se encuentra un primo demostrado
 
         while(!proof)
         {
-            mpz_gcd_ui(mcd, p, 255255);
+            mpz_mcd_ui(mcd, p, 255255);
             if(mpz_cmp_ui(mcd, 1) == 0)
             {
                 mpz_sub_ui(nmenos1, p, 1);
@@ -101,7 +103,7 @@ int main()
                     mpz_set_ui(mrbase, phi[i]);
                     if(millerrabintest(p, mrfactor, millerrabin, nmenos1, mrbase) != 1)
                     {
-                        randomNBitOddNumber(p, 32, state);
+                        randomNBitOddNumber(p, initialStart, state);
                         break;
                     }
                 }
@@ -109,17 +111,16 @@ int main()
                     proof = 1;
             }
             else
-                randomNBitOddNumber(p, 32, state);
+                randomNBitOddNumber(p, initialStart, state);
         }
 
         //gmp_printf("Primer primo p demostrado = %Zd\n", p);
 
         //Ciclo para generar primos más grandes desde 2^32 hasta 2^nbits
 
-        aux = floorlog(nbits);
         bsize = mpz_sizeinbase(p, 2);
 
-        for(i = 5; i < aux; i++)
+        for(i = 1; i < aux; i++)
         {
 
             //Generación de candidato y preparación de parámetros del test de Pocklington
@@ -137,7 +138,7 @@ int main()
                         mpz_mul_ui(r, k, 2);
                         mpz_mul(n, r, p);
                         mpz_add_ui(n, n, 1);
-            
+
                         mpz_gcd(mcd, n, filter);
                     }while(mpz_cmp_ui(mcd, 1) != 0);
 
@@ -147,11 +148,13 @@ int main()
 
             mpz_set(p, n);
             bsize = mpz_sizeinbase(p, 2);
-            //printf("Prime found\n");
+            //printf("bit size: %d\n", bsize);
         }
 
         //Ajuste de bits
         m = nbits - bsize;
+
+        //printf("m = %d\n", m);
 
         do
         {
@@ -172,6 +175,8 @@ int main()
             }while(mpz_probab_prime_p(n, 1) == 0);
 
         }while(!pocklingtonTest(n, p, r, base, criterion, mcd));
+
+        //printf("prime bitsize = %d\n", mpz_sizeinbase(n, 2));
 
         //mpz_set(p, n);
 
@@ -217,12 +222,13 @@ int main()
     return 0;
 }
 
-int floorlog(int num)
+int floorlog(int num, int initial[1])
 {
     int i = 0;
-    while(num > 1)
+    while(num > 32)
     {
         num = num / 2;
+        initial[0] = num;
         i++;
     }
     return i;
