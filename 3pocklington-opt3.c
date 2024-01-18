@@ -135,18 +135,21 @@ int main()
                     {
                         do
                         {
-                            mpz_rrandomb(k, state, exp-1);
-                        }while(mpz_cmp(k, psqr) > 0);
+                            do
+                            {
+                                mpz_rrandomb(k, state, exp-1);
+                            }while(mpz_cmp(k, psqr) > 0);
 
-                        mpz_gcd(r, k, p);
-                    }while(mpz_cmp_ui(r, 1) != 0);
+                            mpz_gcd(r, k, p);
+                        }while(mpz_cmp_ui(r, 1) != 0);
 
-                    mpz_mul_ui(r, k, 2);
-                    mpz_mul(n, r, p);
-                    mpz_add_ui(n, n, 1);
+                        mpz_mul_ui(r, k, 2);
+                        mpz_mul(n, r, p);
+                        mpz_add_ui(n, n, 1);
 
-                    mpz_gcd(mcd, n, filter);
-                }while(mpz_cmp_ui(mcd, 1) != 0);
+                        mpz_gcd(mcd, n, filter);
+                    }while(mpz_cmp_ui(mcd, 1) != 0);
+                }while(mpz_probab_prime_p(n, 1) == 0);
 
             }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u, counter)); 
             
@@ -188,17 +191,20 @@ int main()
                 {
                     do
                     {
-                        mpz_rrandomb(k, state, m-1);
-                    }while(mpz_cmp(k, psqr) > 0);
-                    mpz_gcd(r, k, p);
-                }while(mpz_cmp_ui(r, 1) != 0);
+                        do
+                        {
+                            mpz_rrandomb(k, state, m-1);
+                        }while(mpz_cmp(k, psqr) > 0);
+                        mpz_gcd(r, k, p);
+                    }while(mpz_cmp_ui(r, 1) != 0);
 
-                mpz_mul_ui(r, k, 2);
-                mpz_mul(n, r, p);
-                mpz_add_ui(n, n, 1);
+                    mpz_mul_ui(r, k, 2);
+                    mpz_mul(n, r, p);
+                    mpz_add_ui(n, n, 1);
 
-                mpz_gcd(mcd, n, filter);
-            }while(mpz_cmp_ui(mcd, 1) != 0);
+                    mpz_gcd(mcd, n, filter);
+                }while(mpz_cmp_ui(mcd, 1) != 0);
+            }while(mpz_probab_prime_p(n, 1) == 0);
 
         }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u, counter));
 

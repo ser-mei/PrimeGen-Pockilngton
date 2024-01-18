@@ -131,15 +131,19 @@ int main()
                 {
                     do
                     {
-                        mpz_rrandomb(k, state, bsize-1);
-                    }while(mpz_cmp(k, p) > 0);
+                        do
+                        {
+                            mpz_rrandomb(k, state, bsize-1);
+                        }while(mpz_cmp(k, p) > 0);
 
-                    mpz_mul_ui(r, k, 2);
-                    mpz_mul(n, r, p);
-                    mpz_add_ui(n, n, 1);
+                        mpz_mul_ui(r, k, 2);
+                        mpz_mul(n, r, p);
+                        mpz_add_ui(n, n, 1);
             
-                    mpz_gcd(mcd, n, filter);
-                }while(mpz_cmp_ui(mcd, 1) != 0);
+                        mpz_gcd(mcd, n, filter);
+                    }while(mpz_cmp_ui(mcd, 1) != 0);
+
+                }while(mpz_probab_prime_p(n, 1) == 0);
 
             }while(!pocklingtonTest(n, p, r, base, criterion, mcd));
 
@@ -155,15 +159,19 @@ int main()
         {
             do
             {
-                mpz_rrandomb(k, state, m-1);
-                while(mpz_cmp(k, p) > 0)
+                do
+                {
                     mpz_rrandomb(k, state, m-1);
-                mpz_mul_ui(r, k, 2);
-                mpz_mul(n, r, p);
-                mpz_add_ui(n, n, 1);
+                    while(mpz_cmp(k, p) > 0)
+                        mpz_rrandomb(k, state, m-1);
+                    mpz_mul_ui(r, k, 2);
+                    mpz_mul(n, r, p);
+                    mpz_add_ui(n, n, 1);
 
-                mpz_gcd(mcd, n, filter);
-            }while(mpz_cmp_ui(mcd, 1) != 0);
+                    mpz_gcd(mcd, n, filter);
+                }while(mpz_cmp_ui(mcd, 1) != 0);
+
+            }while(mpz_probab_prime_p(n, 1) == 0);
 
         }while(!pocklingtonTest(n, p, r, base, criterion, mcd));
 
