@@ -7,7 +7,7 @@
 int floorlog(int num, int stages[1]);
 
 //Test de Pocklington
-int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t k, mpz_t s, mpz_t u, int counter[2]);
+int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t k, mpz_t s, mpz_t u);
 
 // Retorna largo en bits del número
 void bitcount(mpz_t n);
@@ -42,10 +42,12 @@ int main()
 
     //Variables enteras
     //phi_n son las bases para demostrar que el primer candidato es primo
-    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0;
+    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0, minsize, maxsize;
     int phi[4] = {2, 3, 5, 7}, stages[1];
-    int j, numtests, counter[2] = {0, 0}, tries = 0, initial = 0, expver, sizefail = 0;
+    int j, numtests, tries = 0, initial = 0, expver, sizefail = 0;
     double avgtime = 0;
+
+    FILE *file;
 
     //Inicialización de variables de gmp
     mpz_init(k);
@@ -67,23 +69,46 @@ int main()
 
     //Inicialización de estado para rng
     gmp_randinit_mt(state);
-    gmp_randseed_ui(state, time(NULL));
+    //gmp_randseed_ui(state, time(NULL));
+    gmp_randseed_ui(state, 1234567890);
 
     //Input de número de bits
-    printf("Enter the number of bits: ");
-    scanf("%d", &nbits);
+    printf("Enter the initial number of bits: ");
+    scanf("%d", &minsize);
+
+    printf("Enter the final number of bits: ");
+    scanf("%d", &maxsize);
 
     printf("Enter the number of tests:\n");
     scanf("%d", &numtests);
 
-    startTotal= clock();
+    file = fopen("3pock-Opt5vP.txt", "w");
 
-    mpz_set_str(filter, "232862364358497360900063316880507363070", 10);
-
-    for(j = 0; j < numtests; j++)
+    if(file == NULL)
     {
-        startTest = clock();
-        proof = 0;
+        printf("Error opening file!\n");
+        exit(1);
+    }
+    else
+    {
+        fprintf(file, "3Pocklington-opt5-version profe\n");
+        fprintf(file, "nbits\t ktest\t avgtime\t totaltime\t errorcount\t sizefails\n");
+    }
+
+    //mpz_set_str(filter, "232862364358497360900063316880507363070", 10);
+    mpz_set_str(filter, "116431182179248680450031658440253681535", 10);
+
+   for(nbits = minsize; nbits <= maxsize; nbits += 500) 
+    {
+        startTotal= clock();
+        avgtime = 0;
+        errorcount = 0;
+        sizefail = 0;
+
+        for(j = 0; j < numtests; j++)
+        {
+            startTest = clock();
+            proof = 0;
 
         //Ciclo para generar primos más grandes acotado por el log base 3 de nbits
         aux = floorlog(nbits, stages);
@@ -158,7 +183,7 @@ int main()
                 //}while(mpz_probab_prime_p(n,1) == 0);
                 }while(mpz_probab_prime_p3(n) == 0);
 
-            }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u, counter));
+            }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u));
             
             //Revisa el criterio de tamaño k < p^2+1
             //mpz_mul(r, p, p);
@@ -216,7 +241,7 @@ int main()
             //}while(mpz_probab_prime_p(n,1) == 0);
             }while(mpz_probab_prime_p3(n) == 0);
 
-        }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u, counter));
+        }while(!pocklingtonTest(n, p, r, base, criterion, mcd, k, s, u));
 
         if(mpz_cmp(k, psqr) > 0)
             sizefail += 1;
@@ -252,6 +277,10 @@ int main()
     //printf("s impares: %d\n", counter[0]);
     //printf("s pares: %d\n", counter[1]);
     //printf("Intentos de Pocklington: %d\n", tries);
+    
+    fprintf(file, "%d\t %d\t %f\t %f\t %d\t %d\n", nbits, numtests, avgtime / numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC, errorcount, sizefail);
+
+    }
 
     //Liberación de memoria
     mpz_clear(k);
@@ -271,6 +300,8 @@ int main()
 
     gmp_randclear(state);
 
+    fclose(file);
+
     return 0;
 }
 
@@ -289,7 +320,7 @@ int floorlog(int num, int stages[1])
 // Test de Pocklington con criterio de tamaño cúbico
 //
 
-int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t k, mpz_t s, mpz_t u, int counter[2])
+int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t k, mpz_t s, mpz_t u)
 {
     int i;
 
