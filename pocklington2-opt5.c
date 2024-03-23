@@ -44,10 +44,10 @@ int main()
     //Variables enteras
     //phi_n son las bases para demostrar que el primer candidato es primo con test de Miller-Rabin
 
-    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0, initial[1], initialStart, minsize, maxsize;
+    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0, initial[1], initialStart, minsize, maxsize, trycount;
     int phi[4] = {2, 3, 5, 7};
     int j, numtests, bsize, sizediff = 0;
-    double avgtime = 0;
+    double avgtime = 0, avgtry;
     unsigned long long limit = 4294967296;
     FILE *f;
 
@@ -91,7 +91,7 @@ int main()
     else
     {
         fprintf(f, "Pocklington-2 Optimizado con Trial Division\n");
-        fprintf(f, "nbits\t ktests\t avgtime\t totaltime\t errors\t sizediff\n");
+        fprintf(f, "nbits\t ktests\t avgtime\t totaltime\t errors\t sizediff\t avgtry\n");
     }
 
     //mpz_set_str(filter, "232862364358497360900063316880507363070", 10);
@@ -104,6 +104,7 @@ int main()
         avgtime = 0;
         errorcount = 0;
         sizediff = 0;
+        trycount = 0;
     
         for(j = 0; j < numtests; j++)
         {
@@ -199,6 +200,7 @@ int main()
                         do
                         {
                             mpz_rrandomb(k, state, m-1);
+                            trycount++;
                         }while(mpz_cmp(k, p) > 0);
 
                         mpz_mul_ui(r, k, 2);
@@ -220,6 +222,7 @@ int main()
             endTest = clock();
 
             avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
+            avgtry = (double)trycount / numtests;
 
             mpz_mul(p,p,p);
             if(mpz_cmp(p,n) > 0)
@@ -240,8 +243,9 @@ int main()
         printf("Tiempo de ejecución total para %d pruebas: %f segundos\n", numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC);
         printf("Errores: %d\n", errorcount);
         printf("Primos que cumplen el criterio de tamaño: %d\n", sizediff);
+        printf("Promedio de intentos: %f\n", avgtry);
 
-        fprintf(f, "%d\t %d\t %f\t %f\t %d\t %d\n", nbits, numtests, avgtime / numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC, errorcount, sizediff);
+        fprintf(f, "%d\t %d\t %f\t %f\t %d\t %d\t %f\n", nbits, numtests, avgtime / numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC, errorcount, sizediff, avgtry);
     }
 
     //Liberación de memoria
@@ -260,6 +264,8 @@ int main()
     mpz_clear(rem);
 
     gmp_randclear(state);
+
+    fclose(f);
 
     return 0;
 }
