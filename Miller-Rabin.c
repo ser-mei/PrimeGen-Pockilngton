@@ -11,9 +11,11 @@ int main()
 
     //Variables enteras
     //flag se utiliza en el test de Miller-Rabin y flag2 para saber si se encontró un primo probable fuerte
-    int nbits, trials, flag = 1, flag2 = 0, power, numtest;
-    double avgtime = 0;
+    int nbits, trials, flag = 1, flag2 = 0, power, numtest, trycount = 0, minsize, maxsize;
+    double avgtime = 0, avgtries = 0;
     int count = 0;
+
+    FILE *f;
 
     clock_t start, end, starttotal, endtotal;
 
@@ -32,12 +34,15 @@ int main()
     gmp_randinit_mt(state);
 
     // Seed the random state
-    gmp_randseed_ui(state, time(NULL));
-
+    //gmp_randseed_ui(state, time(NULL));
+    gmp_randseed_ui(state, 1234567890);
 
     // Get the number of bits as input
-    printf("Enter the number of bits: ");
-    scanf("%d", &nbits);
+    printf("Enter the initial number of bits: ");
+    scanf("%d", &minsize);
+
+    printf("Enter the final number of bits: ");
+    scanf("%d", &maxsize);
 
     printf("Enter the number of tests: ");
     scanf("%d", &numtest);
@@ -46,13 +51,35 @@ int main()
     scanf("%d", &trials);
 
     //trials = 25;
+    
+    f = fopen("Miller-Rabin-base.txt", "w");
 
-    starttotal = clock();
+    if(f == NULL)
+    {
+        printf("Error opening file!\n");
+        return 1;
+    }
+    else
+    {
+        fprintf(f, "Miller-Rabin version base\n");
+    fprintf(f, "nbits\t trials\t avgtime\t errors\t avgtries\n");
+    }
+
+
+    for(nbits = minsize; nbits <= maxsize; nbits += 500)
+    {
+
+        starttotal = clock();
+
+        avgtime = 0;
+        avgtries = 0;
+        errors = 0;
 
     for(int j = 0; j < numtest; j++)
     {
 
     start = clock();
+    trycount = 0;
 
     flag2 = 0;
 
@@ -114,6 +141,7 @@ int main()
 
     end = clock();
     avgtime += (double)(end - start) / CLOCKS_PER_SEC;
+    avgtries += (double) trycount;
 
     if(mpz_probab_prime_p(rand_num, 25) == 0)
         count += 1;
@@ -123,10 +151,18 @@ int main()
 
     endtotal = clock();
 
+    avgtries = avgtries/numtest;
+
     //printf("Time: %f segundos \n", (double)(end - start) / CLOCKS_PER_SEC);
     printf("Average time for a %d bits prime: %f segundos \n", nbits, avgtime/numtest);
     printf("Total time: %f segundos \n", (double)(endtotal - starttotal) / CLOCKS_PER_SEC);
     printf("Number of errors: %d\n", count);
+    printf("Average number of tries: %f\n", avgtries);
+    printf("------------------------------------------------------------\n");
+
+    fprintf(f, "%d\t %d\t %f\t %d\t %f\n", nbits, trials, avgtime/numtest, count, avgtries);
+
+    }
 
 
 
