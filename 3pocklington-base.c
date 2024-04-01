@@ -9,12 +9,8 @@ int floorlog(int num);
 //Test de Pocklington
 int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd, mpz_t k, mpz_t s, mpz_t u, int counter[2]);
 
-// Retorna largo en bits del número
-void bitcount(mpz_t n);
-
 // Retorna número impar aleatorio de n-bits
 void randomNBitOddNumber(mpz_t num, int nbits, gmp_randstate_t state);
-
 
 //Test de Miller-Rabin
 int millerrabintest(mpz_t n, int exp, mpz_t t, mpz_t nMinus1, mpz_t base);
@@ -40,10 +36,12 @@ int main()
 
     //Variables enteras
     //phi_n son las bases para demostrar que el primer candidato es primo
-    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0;
+    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0, minsize, maxsize;
     int phi[4] = {2, 3, 5, 7}, stages[10];
-    int j, numtests, counter[2] = {0, 0}, tries = 0, initial = 0, expver, sizefail = 0;
-    double avgtime = 0;
+    int j, numtests, counter[2] = {0, 0}, tries = 0, initial = 0, expver, sizefail = 0, trycount = 0;
+    double avgtime = 0, avgtries = 0;
+
+    FILE *f;
 
     //Inicialización de variables de gmp
     mpz_init(k);
@@ -64,16 +62,41 @@ int main()
 
     //Inicialización de estado para rng
     gmp_randinit_mt(state);
-    gmp_randseed_ui(state, time(NULL));
+    //gmp_randseed_ui(state, time(NULL));
+    gmp_randseed_ui(state, 1234567890);
 
     //Input de número de bits
-    printf("Enter the number of bits: ");
-    scanf("%d", &nbits);
+    printf("Enter the initial number of bits: ");
+    scanf("%d", &minsize);
+
+    printf("Enter the final number of bits: ");
+    scanf("%d", &maxsize);
 
     printf("Enter the number of tests:\n");
     scanf("%d", &numtests);
 
-    startTotal= clock();
+    f = fopen("3pock-base-times.txt", "w");
+
+    if(f == NULL)
+    {
+        printf("Error opening file\n");
+        return 1;
+    }
+    else
+    {
+        fprintf(f, "POCK3 versión base sin optimizar\n");
+        fprintf(f, "nbits\t numtests\t avgtime\t totaltime\t errors\t sizefails\t avgtries\n");
+    }
+
+    for(nbits = minsize; nbits <= maxsize; nbits += 500)
+    {
+
+        startTotal= clock();
+
+        avgtime = 0;
+        errorcount = 0;
+        sizefail = 0;
+        avgtries = 0;
 
     for(j = 0; j < numtests; j++)
     {
@@ -172,6 +195,7 @@ int main()
                 do
                 {
                     mpz_rrandomb(k, state, m-1);
+                    trycount++;
                 }while(mpz_cmp(k, psqr) > 0);
                 mpz_gcd(r, k, p);
             }while(mpz_cmp_ui(r, 1) != 0);
@@ -189,9 +213,12 @@ int main()
         {
         do
         {
-            mpz_rrandomb(k, state, m-1);
-            while(mpz_cmp(k, p) > 0)
+            do
+            {
                 mpz_rrandomb(k, state, m-1);
+                trycount++;
+            }while(mpz_cmp(k, p) > 0);
+
             mpz_mul_ui(r, k, 2);
             mpz_mul(n, r, p);
             mpz_add_ui(n, n, 1);
@@ -199,7 +226,6 @@ int main()
 
         if(mpz_cmp(k, p) > 0)
             sizefail += 1;
-
         }
 
         //printf("Bits de k ");
@@ -207,11 +233,13 @@ int main()
         //printf("Bits de p ");
         //bitcount(p);
 
-        mpz_set(p, n);
+        //mpz_set(p, n);
 
         endTest = clock();
 
         avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
+
+        avgtries += (double)trycount/numtests;
 
         if(mpz_probab_prime_p(p, 15) == 0)
             errorcount += 1;
@@ -223,14 +251,20 @@ int main()
 
     endTotal = clock();
 
-
     printf("Tiempo de búsqueda promedio para primo de %d bits: %f segundos\n", nbits, avgtime / numtests);
     printf("Tiempo de ejecución total para %d pruebas: %f segundos\n", numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC);
     printf("Errores : %d\n", errorcount);
     printf("Fallas de tamaño: %d\n", sizefail);
+    printf("Intentos promedio: %f\n", avgtries);
+    printf("------------------------------------------------------------------------\n");
+
     //printf("s impares: %d\n", counter[0]);
     //printf("s pares: %d\n", counter[1]);
     //printf("Intentos de Pocklington: %d\n", tries);
+
+    fprintf(f, "%d\t %d\t %f\t %f\t %d\t %d\t %f\n", nbits, numtests, avgtime/numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC, errorcount, sizefail, avgtries);
+
+    }
 
     //Liberación de memoria
     mpz_clear(k);
@@ -249,6 +283,8 @@ int main()
     mpz_clear(psqr);
 
     gmp_randclear(state);
+
+    fclose(f);
 
     return 0;
 }
@@ -271,30 +307,21 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_
 {
     int i, bases[2] = {2, 3};
 
-    //gcd con 105
-    //mpz_gcd_ui(mcd, n, 105);
-    //if(mpz_cmp_ui(mcd, 1) != 0)
-    //{
-        //printf("gcd with 105 failed\n");
-    //    return 0;
-    //}
-
     for (i = 0; i < 2; i++)
     {
         mpz_set_ui(base, bases[i]);
         mpz_powm(criterion, base, r, n);
-        mpz_sub_ui(criterion, criterion, 1);
-        mpz_gcd(mcd, criterion, n);
-
-        if(mpz_cmp_ui(mcd, 1) != 0)
+        mpz_powm(criterion, criterion, p, n);
+        if(mpz_cmp_ui(criterion, 1) != 0)
         {
             //printf("Pocklington test failed\n");
             return 0;
         }
 
-        mpz_add_ui(criterion, criterion, 1);
-        mpz_powm(criterion, criterion, p, n);
-        if(mpz_cmp_ui(criterion, 1) == 0)
+        mpz_powm(criterion, base, r, n);
+        mpz_sub_ui(criterion, criterion, 1);
+        mpz_gcd(mcd, criterion, n);
+        if(mpz_cmp_ui(mcd, 1) == 0)
         {
             //printf("Pocklington test passed\n");
 
@@ -328,21 +355,6 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_
     return 0;
 }
 
-void bitcount(mpz_t n)
-{
-    mpz_t aux;
-    mpz_init(aux);
-    mpz_set(aux, n);
-    int i = 0;
-    while(mpz_cmp_ui(aux, 0) > 0)
-    {
-        mpz_fdiv_q_ui(aux, aux, 2);
-        i++;
-    }
-    printf("bits = %d\n", i);
-
-    mpz_clear(aux);
-}
 
 void randomNBitOddNumber(mpz_t num, int nbits, gmp_randstate_t state)
 {
