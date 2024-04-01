@@ -39,14 +39,10 @@ int main()
     //Variables enteras
     //phi_n son las bases para demostrar que el primer candidato es primo con test de Miller-Rabin
 
-    int i, j, nbits, numtests, errorcount = 0, primecount, trycount = 0, flag, totalprimes = 2;
+    int i, j, nbits, numtests, errorcount = 0, primecount, trycount = 0, flag, totalprimes = 2, euclidCount = 0, primeDiff = 0, primeDiffCount = 0;
     double avgtime = 0;
 
-    //Arreglo de mpz_t de tamaño 2
-    n = (mpz_t *)malloc(2 * sizeof(mpz_t));
 
-    for(i = 0; i < 2; i++)
-        mpz_init(n[i]);
 
     mpz_init(mcd);
     mpz_init(s);
@@ -64,7 +60,8 @@ int main()
 
     //Inicialización de estado para rng
     gmp_randinit_mt(state);
-    gmp_randseed_ui(state, time(NULL));
+    //gmp_randseed_ui(state, time(NULL));
+    gmp_randseed_ui(state, 1234567890);
 
     //Input de número de bits y cantidad de primos para generar
     printf("Enter the number of bits: ");
@@ -72,6 +69,12 @@ int main()
 
     printf("Enter the number of tests:\n");
     scanf("%d", &numtests);
+
+    //Arreglo de mpz_t de tamaño 2
+    n = (mpz_t *)malloc(nbits * sizeof(mpz_t));
+
+    for(i = 0; i < nbits; i++)
+        mpz_init(n[i]);
 
     //mpz_init_set_str(filter, "232862364358497360900063316880507363070", 10);
 
@@ -92,6 +95,7 @@ int main()
         {
             for(j = primecount-2; j >= 0; j--)
             {
+                //primeDiff = mpz_cmp(n[j], n[primecount - 1]);
                 mpz_gcdext(mcd, s, t, n[j], n[primecount - 1]);
                 //gmp_printf("s = %Zd, t = %Zd, mcd = %Zd\n", s, t, mcd);
 
@@ -102,8 +106,6 @@ int main()
                     mpz_add_ui(prime, prime, 1);
                     mpz_mul_si(r, s, -2);
 
-                    if(mpz_probab_prime_p(prime, 1) != 0)
-                    {
                         if(pocklingtonTest(prime, n[j], r, base, criterion, mcd) == 1)
                         {
                         //gmp_printf("Primo--+strong generado: %Zd\n", prime);
@@ -116,9 +118,14 @@ int main()
                         //    printf("N+1 = 2tq -> Primo--+strong\n");
                         //bitcount(prime);
                             flag = 1;
+                            //mpz_abs(s,s);
+                            //if(mpz_cmp(n[j], s) > 0)
+                            //    euclidCount += 1;
+                            //if(primeDiff > 0)
+                            //    primeDiffCount += 1;
                             break;
                         }
-                    }
+                    
                 }
                 else
                 {
@@ -127,8 +134,7 @@ int main()
                     mpz_add_ui(prime, prime, 1);
                     mpz_mul_si(r, t, -2);
 
-                    if(mpz_probab_prime_p(prime, 1) != 0)
-                    {
+                    
                         if(pocklingtonTest(prime, n[primecount - 1], r, base, criterion, mcd) == 1)
                         {
                         //gmp_printf("Primo--+strong generado: %Zd\n", prime);
@@ -142,9 +148,14 @@ int main()
 
                         //bitcount(prime);
                             flag = 1;
+                            //mpz_abs(t,t);
+                            //if(mpz_cmp(n[primecount-1], t) > 0)
+                            //    euclidCount += 1;
+                            //if(primeDiff < 0)
+                            //    primeDiffCount += 1;
                             break;
                         }
-                    }
+                    
                 }
                 //else
                 //gmp_printf("Primo generado = %Zd\n", n);
@@ -152,9 +163,9 @@ int main()
                 //bitcount(p);
 
                 //printf("Tiempo de búsqueda para número primo de %d bits: %f\n segundos", nbits, ((double)end - start) / CLOCKS_PER_SEC);
-                
-            }
             trycount += 1;
+
+            }
             //printf("N = 2*sp + 1 No es primo \n");
             primecount += 1;
             //if(primecount > 100)
@@ -164,11 +175,16 @@ int main()
             //    break;
             //}
 
-            if(primecount >= totalprimes)
+            if(primecount > totalprimes)
+            {
+                //n = (mpz_t *)realloc(n, primecount * sizeof(mpz_t));
+                //mpz_init(n[primecount - 1]);
+                totalprimes += 1;
+            }
+            if(totalprimes > nbits)
             {
                 n = (mpz_t *)realloc(n, primecount * sizeof(mpz_t));
                 mpz_init(n[primecount - 1]);
-                totalprimes += 1;
             }
 
             primeGenPocklington2(nbits/2, n[primecount - 1], state, k, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd);
@@ -190,8 +206,10 @@ int main()
 
     printf("Primos generados para encontrar un primo--+strong: %d y %d\n", trycount, totalprimes);
 
+    printf("Euclid: %d y Correspondencia de diferencia de tamaño: %d\n", euclidCount, primeDiffCount);
+
     //Liberación de memoria
-    for(i = 0; i < totalprimes; i++)
+    for(i = 0; i < nbits; i++)
         mpz_clear(n[i]);
     
     mpz_clear(mcd);
@@ -250,27 +268,31 @@ int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_
         //Primera parte del criterio:
         //base^((n-1)/p)
         mpz_set_ui(base, bases[i]);
+
+        //mpz_add_ui(criterion, criterion, 1);
+        mpz_powm(criterion, base, r, n);
+        mpz_powm(criterion, criterion, p, n);
+        if(mpz_cmp_ui(criterion, 1) != 0)
+        {
+            //printf("Pocklington test passed\n");
+            return 0;
+        }
+
         mpz_powm(criterion, base, r, n);
         mpz_sub_ui(criterion, criterion, 1);
         mpz_gcd(mcd, criterion, n);
 
-        if(mpz_cmp_ui(mcd, 1) != 0)
+        if(mpz_cmp_ui(mcd, 1) == 0)
         {
-            //printf("Primera parte de Pocklington falló \n");
-            return 0;
+            //printf("Primo encontrado en Pock2\n");
+            return 1;
         }
 
         //Segunda parte del criterio:
         //criterio^p = criterio^(n-1) -> Test de Fermat
         //Si el candidato lo pasa es primo,  no requiere verificación de tamaño por construcción del candidato
         //Si no lo pasa, se intenta con otra base o se rechaza el número
-        mpz_add_ui(criterion, criterion, 1);
-        mpz_powm(criterion, criterion, p, n);
-        if(mpz_cmp_ui(criterion, 1) == 0)
-        {
-            //printf("Pocklington test passed\n");
-            return 1;
-        }
+
    }
    return 0;
 }
@@ -355,9 +377,6 @@ void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state, mpz_t k, mp
 
         while(!proof)
         {
-            mpz_gcd_ui(randNumb, p, 15015);
-            if(mpz_cmp_ui(randNumb, 1) == 0)
-            {
                 mpz_sub_ui(nmenos1, p, 1);
                 mrfactor = mpz_scan1(nmenos1, 0);
                 mpz_tdiv_q_2exp(millerrabin, p, mrfactor);
@@ -373,9 +392,8 @@ void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state, mpz_t k, mp
                 }
                 if(i == 4)
                     proof = 1;
-            }
-            else
-                randomNBitOddNumber(p, 32, state);
+                else
+                    randomNBitOddNumber(p, 32, state);
         }
 
         //gmp_printf("Primer primo p demostrado = %Zd\n", p);
@@ -384,9 +402,10 @@ void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state, mpz_t k, mp
 
         aux = floorlog(nbits);
 
+        exp = mpz_sizeinbase(p, 2);
+
         for(i = 5; i < aux; i++)
         {
-            exp = 1 << i;
             //printf("exponente = 2^%d = %d\n", i, exp);
 
             //Generación de candidato y preparación de parámetros del test de Pocklington
@@ -398,10 +417,14 @@ void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state, mpz_t k, mp
                 
                     //randomNBitOddNumber(k, exp, state);
                     mpz_rrandomb(k, state, exp-1);
+
+                }while(mpz_cmp(k, p) > 0);
+
                     mpz_mul_ui(r, k, 2);
                     mpz_mul(n, r, p);
                     mpz_add_ui(n, n, 1);
-                }while(mpz_probab_prime_p(n, 1) == 0);
+                    
+
             }while(!pocklingtonTest(n, p, r, base, criterion, mcd));
             //{
             //    randomNBitOddNumber(k, exp, state);
@@ -411,31 +434,33 @@ void primeGenPocklington2(int nbits, mpz_t n, gmp_randstate_t state, mpz_t k, mp
             //}
             //gmp_printf("prime n = %Zd = %Zd * %Zd + 1\n", n, p, r);
             mpz_set(p, n);
+            exp = mpz_sizeinbase(p, 2);
         }
 
         //bitcount(n);
 
         //Ajuste de bits
 
-        m = 1 << aux;
         //printf("logfloor de nbits = %d\n", aux);
         //printf("m = %d\n", m);
-        m = nbits - m;
+        m = nbits - exp;
         //printf("m = %d\n", m);
 
         do
         {
             do
             {
-            
                 //randomNBitOddNumber(k, m, state);
                 mpz_rrandomb(k, state, m-1);
+
+            }while(mpz_cmp(k, p) > 0);
+
                 mpz_mul_ui(r, k, 2);
                 mpz_mul(n, r, p);
                 mpz_add_ui(n, n, 1);
-            } while (mpz_probab_prime_p(n, 1) == 0);
         }while(!pocklingtonTest(n, p, r, base, criterion, mcd));
 
+        //printf("PRIMO ENCONTRADO\n");
         //mpz_set(p, n);
         //gmp_printf("Número primo n = %Zd \n", p);
 
