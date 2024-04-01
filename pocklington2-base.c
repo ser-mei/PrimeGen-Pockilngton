@@ -1,3 +1,5 @@
+// Versión Base de POCK2 sin optimizar
+
 #include <stdlib.h>
 #include <stdio.h>
 #include <gmp.h>
@@ -8,9 +10,6 @@ int floorlog(int num);
 
 //Test de Pocklington
 int pocklingtonTest(mpz_t n, mpz_t p, mpz_t r, mpz_t base, mpz_t criterion, mpz_t mcd);
-
-// Retorna largo en bits del número
-void bitcount(mpz_t n);
 
 // Retorna un número impar aleatorio de n-bits
 void randomNBitOddNumber(mpz_t num, int nbits, gmp_randstate_t state);
@@ -27,7 +26,7 @@ int main()
     // r = 2k
     // El resto de variables se utiliza dentro de los tests de primalidad
 
-    mpz_t k, n, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd, filter;
+    mpz_t k, n, p, r, randNumb, millerrabin, mrbase, nmenos1, base, criterion, mcd;
 
     //Declaración de estado para rng
     gmp_randstate_t state;
@@ -38,10 +37,12 @@ int main()
     //Variables enteras
     //phi_n son las bases para demostrar que el primer candidato es primo con test de Miller-Rabin
 
-    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0;
+    int i, nbits, aux, exp, m, proof = 0, mrfactor, errorcount = 0, minsize, maxsize;
     int phi[4] = {2, 3, 5, 7};
-    int j, numtests, bsize, sizediff = 0;
-    double avgtime = 0;
+    int j, numtests, bsize, sizediff = 0, trycount = 0;
+    double avgtime = 0, avgtries = 0;
+
+    FILE *f;
 
     //Inicialización de variables de gmp
     mpz_init(k);
@@ -55,20 +56,43 @@ int main()
     mpz_init(base);
     mpz_init(criterion);
     mpz_init(mcd);
-    mpz_init(filter);
 
     //Inicialización de estado para rng
     gmp_randinit_mt(state);
-    gmp_randseed_ui(state, time(NULL));
+    //gmp_randseed_ui(state, time(NULL));
+    gmp_randseed_ui(state, 1234567890);
 
     //Input de número de bits y cantidad de primos para generar
-    printf("Enter the number of bits: ");
-    scanf("%d", &nbits);
+    printf("Enter the initial number of bits: ");
+    scanf("%d", &minsize);
+
+    printf("Enter the final number of bits: ");
+    scanf("%d", &maxsize);
 
     printf("Enter the number of tests:\n");
     scanf("%d", &numtests);
 
-    startTotal= clock();
+    f = fopen("pocklington2-base.txt", "w");
+
+    if(f == NULL)
+    {
+        printf("Error opening file\n");
+        return 1;
+    }
+    else
+    {
+        fprintf(f, "POCK2 versión BASE \n");
+        fprintf(f, "nbits\t ktest\t avgtime\t totaltime\t errocount\t sizediff\t avgtries\n");
+    }
+
+    for(nbits = minsize; nbits <= maxsize; nbits += 500)
+    {
+        startTotal= clock();
+
+        errorcount = 0;
+        sizediff = 0;
+        avgtime = 0;
+        avgtries = 0;
     
     for(j = 0; j < numtests; j++)
     {
@@ -105,8 +129,6 @@ int main()
                 randomNBitOddNumber(p, 32, state);
         }
 
-        //gmp_printf("Primer primo p demostrado = %Zd\n", p);
-
         //Ciclo para generar primos más grandes desde 2^32 hasta 2^nbits
 
         aux = floorlog(nbits);
@@ -123,9 +145,9 @@ int main()
                     mpz_rrandomb(k, state, bsize-1);
                 }while(mpz_cmp(k, p) > 0);
 
-            mpz_mul_ui(r, k, 2);
-            mpz_mul(n, r, p);
-            mpz_add_ui(n, n, 1);
+                mpz_mul_ui(r, k, 2);
+                mpz_mul(n, r, p);
+                mpz_add_ui(n, n, 1);
             }while(!pocklingtonTest(n, p, r, base, criterion, mcd));
 
             mpz_set(p, n);
@@ -137,9 +159,12 @@ int main()
 
         do
         {
-            mpz_rrandomb(k, state, m-1);
-            while(mpz_cmp(k, p) > 0)
+            do
+            {
                 mpz_rrandomb(k, state, m-1);
+                trycount++;
+            }while(mpz_cmp(k, p) > 0);
+
             mpz_mul_ui(r, k, 2);
             mpz_mul(n, r, p);
             mpz_add_ui(n, n, 1);
@@ -150,6 +175,8 @@ int main()
         endTest = clock();
 
         avgtime += ((double)endTest - startTest) / CLOCKS_PER_SEC;
+
+        avgtries = (double)trycount / numtests;
 
         mpz_mul(p,p,p);
         if(mpz_cmp(p,n) > 0)
@@ -170,6 +197,11 @@ int main()
     printf("Tiempo de ejecución total para %d pruebas: %f segundos\n", numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC);
     printf("Errores: %d\n", errorcount);
     printf("Primos que cumplen el criterio de tamaño: %d\n", sizediff);
+    printf("Intentos promedio: %f\n", avgtries);
+    printf("----------------------------------------------------------------------------------------------\n");
+
+    fprintf(f, "%d\t %d\t %f\t %f\t %d\t %d\t %f\n", nbits, numtests, avgtime / numtests, ((double)endTotal - startTotal) / CLOCKS_PER_SEC, errorcount, sizediff, avgtries);
+    }
 
     //Liberación de memoria
     mpz_clear(k);
@@ -185,6 +217,8 @@ int main()
     mpz_clear(mcd);
 
     gmp_randclear(state);
+
+    fclose(f);
 
     return 0;
 }
